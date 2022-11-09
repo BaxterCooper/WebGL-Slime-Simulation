@@ -1,1 +1,1 @@
-const AGENT_COUNT = 10000;
+const AGENT_COUNT = 100000;

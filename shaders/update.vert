@@ -7,15 +7,15 @@ in vec2 velocity;
 
 uniform sampler2D screenTexture;
 uniform vec2 dimensions;
+uniform float turnSpeed;
+
+uniform float sensorFOV;
+uniform float sensorOffset;
+uniform int sensorSize;
+
 
 out vec2 outPosition;
 out vec2 outVelocity;
-
-float turnSpeed = 0.2;
-
-float FOV = 0.8;
-float sensorOffset = 3.0;
-int sensorSize = 0;
 
 
 vec2 rotate(vec2 v, float a) {
@@ -47,8 +47,8 @@ void main() {
     outVelocity = velocity;
 
     vec2 directionForward = velocity;
-    vec2 directionRight = rotate(velocity, 0.5 * FOV);
-    vec2 directionLeft = rotate(velocity, -0.5 * FOV);
+    vec2 directionRight = rotate(velocity, 0.5 * sensorFOV);
+    vec2 directionLeft = rotate(velocity, -0.5 * sensorFOV);
 
     vec4 senseFoward = sense(texCoord + directionForward * sensorOffset / dimensions);
     vec4 senseRight = sense(texCoord + directionRight * sensorOffset / dimensions);

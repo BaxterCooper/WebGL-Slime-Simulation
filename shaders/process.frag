@@ -6,6 +6,7 @@ in vec2 texCoord;
 
 uniform sampler2D screenTexture;
 uniform vec2 dimensions;
+uniform float fadeSpeed;
 
 out vec4 fragColor;
 
@@ -23,7 +24,7 @@ void main() {
 
     color /= 9.0;
 
-    color -= 0.01;
+    color -= fadeSpeed;
     color.a = 1.0;
 
     fragColor = color;

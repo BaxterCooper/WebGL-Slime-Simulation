@@ -1,4 +1,56 @@
-async function main() {
+const agentParameters = {
+    count: 100000,
+    color: {r: 255, g: 255, b: 255},
+    turnSpeed: 0.2
+}
+
+const sensorParameters = {
+    FOV: 0.8,
+    size: 0,
+    offset: 3.0
+}
+
+const processParameters = {
+    fadeSpeed: 0.01,
+    blurSpeed: 0.0
+}
+
+const pane = new Tweakpane.Pane({
+    title: 'Parameters',
+});
+
+const agentFolder = pane.addFolder({
+    title: 'Agent Parameters',
+    expanded: true
+});
+
+agentFolder.addInput(agentParameters, 'count');
+agentFolder.addInput(agentParameters, 'color');
+agentFolder.addInput(agentParameters, 'turnSpeed');
+
+const sensorFolder = pane.addFolder({
+    title: 'Sensor Parameters',
+    expanded: true
+});
+
+sensorFolder.addInput(sensorParameters, 'FOV');
+sensorFolder.addInput(sensorParameters, 'size');
+sensorFolder.addInput(sensorParameters, 'offset');
+
+const processFolder = pane.addFolder({
+    title: 'Post-Processing Parameters',
+    expanded: true
+});
+
+processFolder.addInput(processParameters, 'fadeSpeed');
+processFolder.addInput(processParameters, 'blurSpeed');
+
+pane.on('change', (event) => {
+    agentParameters[event.presetKey] = event.value;
+})
+
+
+function main() {
     const gl = getContext();
     
 
@@ -14,7 +66,7 @@ async function main() {
     // ------------------------------------------------------------------------
     // DATA
 
-    const agents = new Array(AGENT_COUNT).fill(0).map(() => new Agent());
+    const agents = new Array(agentParameters.count).fill(0).map(() => new Agent());
 
     const agentPositions = agents.map(agent => agent.position).flat();
     const agentVelocities = agents.map(agent => agent.velocity).flat();
@@ -157,8 +209,10 @@ async function main() {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         
         gl.useProgram(agentProgram);
+        const agentColor = Object.values(agentParameters.color).map((value) => value/255);
+        gl.uniform3f(gl.getUniformLocation(agentProgram, 'agentColor'), ...agentColor);
         gl.bindVertexArray(agentVAO);
-        gl.drawArrays(gl.POINTS, 0, AGENT_COUNT);
+        gl.drawArrays(gl.POINTS, 0, agentParameters.count);
 
 
         // draw texture to screen
@@ -181,6 +235,7 @@ async function main() {
         gl.useProgram(processProgram);
 
         gl.uniform2f(gl.getUniformLocation(processProgram, 'dimensions'), gl.canvas.width, gl.canvas.height);
+        gl.uniform1f(gl.getUniformLocation(processProgram, 'fadeSpeed'), processParameters.fadeSpeed);
         
         gl.bindVertexArray(processVAO);
         
@@ -192,6 +247,10 @@ async function main() {
         // update agents
         gl.useProgram(updateProgram);
         gl.uniform2f(gl.getUniformLocation(updateProgram, 'dimensions'), gl.canvas.width, gl.canvas.height);
+        gl.uniform1f(gl.getUniformLocation(updateProgram, 'turnSpeed'), agentParameters.turnSpeed);
+        gl.uniform1f(gl.getUniformLocation(updateProgram, 'sensorFOV'), sensorParameters.FOV);
+        gl.uniform1f(gl.getUniformLocation(updateProgram, 'sensorOffset'), sensorParameters.offset);
+        gl.uniform1i(gl.getUniformLocation(updateProgram, 'sensorSize'), sensorParameters.size);
         gl.bindTexture(gl.TEXTURE_2D, screenTexure);
 
         gl.bindVertexArray(updateVAO);
@@ -201,7 +260,7 @@ async function main() {
         gl.enable(gl.RASTERIZER_DISCARD);
         gl.beginTransformFeedback(gl.POINTS);
 
-        gl.drawArrays(gl.POINTS, 0, AGENT_COUNT);
+        gl.drawArrays(gl.POINTS, 0, agentParameters.count);
 
         gl.endTransformFeedback();
         gl.disable(gl.RASTERIZER_DISCARD);
