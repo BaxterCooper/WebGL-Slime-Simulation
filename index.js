@@ -9,7 +9,7 @@ const agentParameters = {
 const sensorParameters = {
     FOV: 0.8,
     size: 0,
-    offset: 3.0
+    offset: 10.0
 }
 
 const processParameters = {
