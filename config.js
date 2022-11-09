@@ -1,1 +1,0 @@
-const AGENT_COUNT = 100000;

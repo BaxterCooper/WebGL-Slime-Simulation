@@ -1,6 +1,8 @@
+const MAX_AGENTS = 200000
+
 const agentParameters = {
     count: 100000,
-    color: {r: 255, g: 255, b: 255},
+    color: {r: 1.0, g: 1.0, b: 1.0},
     turnSpeed: 0.2
 }
 
@@ -15,8 +17,10 @@ const processParameters = {
     blurSpeed: 0.0
 }
 
+
 const pane = new Tweakpane.Pane({
     title: 'Parameters',
+
 });
 
 const agentFolder = pane.addFolder({
@@ -24,26 +28,28 @@ const agentFolder = pane.addFolder({
     expanded: true
 });
 
-agentFolder.addInput(agentParameters, 'count');
-agentFolder.addInput(agentParameters, 'color');
-agentFolder.addInput(agentParameters, 'turnSpeed');
-
 const sensorFolder = pane.addFolder({
     title: 'Sensor Parameters',
     expanded: true
 });
-
-sensorFolder.addInput(sensorParameters, 'FOV');
-sensorFolder.addInput(sensorParameters, 'size');
-sensorFolder.addInput(sensorParameters, 'offset');
 
 const processFolder = pane.addFolder({
     title: 'Post-Processing Parameters',
     expanded: true
 });
 
-processFolder.addInput(processParameters, 'fadeSpeed');
-processFolder.addInput(processParameters, 'blurSpeed');
+
+agentFolder.addInput(agentParameters, 'count', { label: 'Count', min: 1, max: MAX_AGENTS });
+agentFolder.addInput(agentParameters, 'color', { label: 'Color', color: {type: 'float'}  });
+agentFolder.addInput(agentParameters, 'turnSpeed', { label: 'Turn Speed', min: 0.0, max: 1.0 });
+
+sensorFolder.addInput(sensorParameters, 'FOV', { label: 'FOV', min: 0.0, max: 6.24 });
+sensorFolder.addInput(sensorParameters, 'size', { label: 'Size', min: 0, max: 4, step: 1 });
+sensorFolder.addInput(sensorParameters, 'offset', { label: 'Offset', min: 0.0, max: 500.0 });
+
+processFolder.addInput(processParameters, 'fadeSpeed', { label: 'Fade Speed', min: 0.0, max: 1.0 });
+processFolder.addInput(processParameters, 'blurSpeed', { label: 'Blur Speed' });
+
 
 pane.on('change', (event) => {
     agentParameters[event.presetKey] = event.value;
@@ -66,7 +72,7 @@ function main() {
     // ------------------------------------------------------------------------
     // DATA
 
-    const agents = new Array(agentParameters.count).fill(0).map(() => new Agent());
+    const agents = new Array(MAX_AGENTS).fill(0).map(() => new Agent());
 
     const agentPositions = agents.map(agent => agent.position).flat();
     const agentVelocities = agents.map(agent => agent.velocity).flat();
@@ -209,7 +215,7 @@ function main() {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         
         gl.useProgram(agentProgram);
-        const agentColor = Object.values(agentParameters.color).map((value) => value/255);
+        const agentColor = Object.values(agentParameters.color).map((value) => value);
         gl.uniform3f(gl.getUniformLocation(agentProgram, 'agentColor'), ...agentColor);
         gl.bindVertexArray(agentVAO);
         gl.drawArrays(gl.POINTS, 0, agentParameters.count);
