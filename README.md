@@ -4,6 +4,8 @@ This slime simulation was inspired by [Coding Adventure: Ant and Slime Simulatio
 
 This is an implementation of the slime simulation using WebGL which can be played around with at https://baxtercooper.github.io/WebGL-Slime-Simulation/.
 
-![Image](./images/image.png)
+![Image](./images/image1.png)
+
+![Image](./images/image2.png)
 
 
