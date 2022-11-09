@@ -39,27 +39,32 @@ vec4 sense(vec2 texCoord) {
 	return sum;
 }
 
+
 void main() {
     vec2 texCoord = (position + 1.0) / 2.0;
 
     outPosition = position + velocity / dimensions;
 
-    outVelocity = velocity;
-
     vec2 directionForward = velocity;
     vec2 directionRight = rotate(velocity, 0.5 * sensorFOV);
     vec2 directionLeft = rotate(velocity, -0.5 * sensorFOV);
 
-    vec4 senseFoward = sense(texCoord + directionForward * sensorOffset / dimensions);
+    vec4 senseForward = sense(texCoord + directionForward * sensorOffset / dimensions);
     vec4 senseRight = sense(texCoord + directionRight * sensorOffset / dimensions);
     vec4 senseLeft = sense(texCoord + directionLeft * sensorOffset / dimensions);
 
-    if (senseFoward.x > senseRight.x && senseFoward.x > senseLeft.x) {
+    float weightForward = senseForward.x + senseForward.y + senseForward.z;
+    float weightRight = senseRight.x + senseRight.y + senseRight.z;
+    float weightLeft = senseLeft.x + senseLeft.y + senseLeft.z;
+
+    if (weightForward > weightRight && weightForward > weightLeft) {
         outVelocity = velocity;
-    } else if (senseRight.x > senseFoward.x && senseRight.x > senseLeft.x) {
+    } else if (weightRight > weightForward && weightRight > weightLeft) {
         outVelocity = velocity + directionRight * turnSpeed;
-    } else if (senseLeft.x > senseFoward.x && senseLeft.x > senseRight.x) {
+    } else if (weightLeft > weightForward && weightLeft > weightRight) {
         outVelocity = velocity + directionLeft * turnSpeed;
+    } else {
+        outVelocity = velocity;
     }
 
     outVelocity = normalize(outVelocity);
@@ -71,6 +76,4 @@ void main() {
     if (outPosition.y <= -1.0 || outPosition.y >= 1.0) {
         outVelocity.y *= -1.0;
     }
-
-
 }
