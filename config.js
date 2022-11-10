@@ -5,7 +5,7 @@ const MAX_AGENTS = 1_000_000
 // default parameters
 const agentParameters = {
     count: 100000,
-    color: {r: 1.0, g: 1.0, b: 1.0},
+    color: {r: 0.0, g: 1.0, b: 0.5},
     turnSpeed: 0.2
 }
 
