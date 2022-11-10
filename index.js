@@ -1,58 +1,9 @@
-const MAX_AGENTS = 200000
-
-const agentParameters = {
-    count: 100000,
-    color: {r: 1.0, g: 1.0, b: 1.0},
-    turnSpeed: 0.2
+class Agent {
+    constructor() {
+        this.position = [Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0];
+        this.velocity = [Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0];
+    }
 }
-
-const sensorParameters = {
-    FOV: 0.8,
-    size: 0,
-    offset: 10.0
-}
-
-const processParameters = {
-    fadeSpeed: 0.01,
-}
-
-
-const pane = new Tweakpane.Pane({
-    title: 'Parameters',
-
-});
-
-const agentFolder = pane.addFolder({
-    title: 'Agent Parameters',
-    expanded: true
-});
-
-const sensorFolder = pane.addFolder({
-    title: 'Sensor Parameters',
-    expanded: true
-});
-
-const processFolder = pane.addFolder({
-    title: 'Post-Processing Parameters',
-    expanded: true
-});
-
-
-agentFolder.addInput(agentParameters, 'count', { label: 'Count', min: 1, max: MAX_AGENTS });
-agentFolder.addInput(agentParameters, 'color', { label: 'Color', color: {type: 'float'}  });
-agentFolder.addInput(agentParameters, 'turnSpeed', { label: 'Turn Speed', min: 0.0, max: 1.0 });
-
-sensorFolder.addInput(sensorParameters, 'FOV', { label: 'FOV', min: 0.0, max: 6.24 });
-sensorFolder.addInput(sensorParameters, 'size', { label: 'Size', min: 0, max: 4, step: 1 });
-sensorFolder.addInput(sensorParameters, 'offset', { label: 'Offset', min: 0.0, max: 100.0 });
-
-processFolder.addInput(processParameters, 'fadeSpeed', { label: 'Fade Speed', min: 0.0, max: 1.0 });
-
-
-pane.on('change', (event) => {
-    agentParameters[event.presetKey] = event.value;
-})
-
 
 function main() {
     const gl = getContext();
@@ -213,9 +164,9 @@ function main() {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         
         gl.useProgram(agentProgram);
-        const agentColor = Object.values(agentParameters.color).map((value) => value);
-        gl.uniform3f(gl.getUniformLocation(agentProgram, 'agentColor'), ...agentColor);
         gl.bindVertexArray(agentVAO);
+        gl.uniform3fv(gl.getUniformLocation(agentProgram, 'agentColor'), new Float32Array(Object.values(agentParameters.color)));
+        
         gl.drawArrays(gl.POINTS, 0, agentParameters.count);
 
 
@@ -224,9 +175,7 @@ function main() {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
         gl.useProgram(screenProgram);
-
         gl.bindVertexArray(screenVAO);
-        
         gl.bindTexture(gl.TEXTURE_2D, screenTexure);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -237,27 +186,23 @@ function main() {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
         gl.useProgram(processProgram);
-
+        gl.bindVertexArray(processVAO);
+        gl.bindTexture(gl.TEXTURE_2D, screenTexure);
         gl.uniform2f(gl.getUniformLocation(processProgram, 'dimensions'), gl.canvas.width, gl.canvas.height);
         gl.uniform1f(gl.getUniformLocation(processProgram, 'fadeSpeed'), processParameters.fadeSpeed);
         
-        gl.bindVertexArray(processVAO);
-        
-        gl.bindTexture(gl.TEXTURE_2D, screenTexure);
-
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
 
         // update agents
         gl.useProgram(updateProgram);
+        gl.bindVertexArray(updateVAO);
+        gl.bindTexture(gl.TEXTURE_2D, screenTexure);
         gl.uniform2f(gl.getUniformLocation(updateProgram, 'dimensions'), gl.canvas.width, gl.canvas.height);
         gl.uniform1f(gl.getUniformLocation(updateProgram, 'turnSpeed'), agentParameters.turnSpeed);
         gl.uniform1f(gl.getUniformLocation(updateProgram, 'sensorFOV'), sensorParameters.FOV);
         gl.uniform1f(gl.getUniformLocation(updateProgram, 'sensorOffset'), sensorParameters.offset);
         gl.uniform1i(gl.getUniformLocation(updateProgram, 'sensorSize'), sensorParameters.size);
-        gl.bindTexture(gl.TEXTURE_2D, screenTexure);
-
-        gl.bindVertexArray(updateVAO);
 
         gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, agentPositionBuffer);
         gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, agentVelocityBuffer);
@@ -270,6 +215,7 @@ function main() {
         gl.disable(gl.RASTERIZER_DISCARD);
         gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
         gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, null);
+
 
         // swap VAOs, buffers, textures and framebuffers
         if (agentVAO === agentVAO1) {
@@ -297,14 +243,16 @@ function main() {
 
 main();
 
-/**
- * 
- * @param {WebGL2RenderingContext} gl 
- * @param {*} vertexSourcePath 
- * @param {*} fragmentSourcePath 
- * @param {*} transformFeedbackVaryings 
- * @returns 
- */
+function getContext() {
+    const canvas = document.getElementsByTagName("canvas")[0];
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+
+    const gl = canvas.getContext("webgl2");
+
+    return gl;
+}
+
 function createProgram(gl, vertexSourcePath, fragmentSourcePath, transformFeedbackVaryings) {
     const vertexSource = fetch(vertexSourcePath);
     const fragmentSource = fetch(fragmentSourcePath);
@@ -332,15 +280,6 @@ function createProgram(gl, vertexSourcePath, fragmentSourcePath, transformFeedba
     return program;
 }
 
-function getContext() {
-    const canvas = document.getElementsByTagName("canvas")[0];
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-
-    const gl = canvas.getContext("webgl2");
-
-    return gl;
-}
 
 function fetch(path, callback) {
     const xhr = new XMLHttpRequest();

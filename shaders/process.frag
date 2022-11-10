@@ -13,6 +13,7 @@ out vec4 fragColor;
 void main() {
     vec4 color = vec4(0.0);
 
+    // 3x3 box-blur
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
             vec2 offsetCoord = texCoord + vec2(i, j) / dimensions;
@@ -21,9 +22,9 @@ void main() {
             color += offsetColor;
         }
     }
-
     color /= 9.0;
 
+    // fade
     color.xyz -= fadeSpeed;
 
     fragColor = color;

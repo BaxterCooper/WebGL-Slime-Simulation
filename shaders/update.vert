@@ -7,8 +7,8 @@ in vec2 velocity;
 
 uniform sampler2D screenTexture;
 uniform vec2 dimensions;
-uniform float turnSpeed;
 
+uniform float turnSpeed;
 uniform float sensorFOV;
 uniform float sensorOffset;
 uniform int sensorSize;
@@ -17,7 +17,7 @@ uniform int sensorSize;
 out vec2 outPosition;
 out vec2 outVelocity;
 
-
+// rotates a 2D vector 'a' radians counter-clockwise
 vec2 rotate(vec2 v, float a) {
 	float s = sin(a);
 	float c = cos(a);
@@ -25,6 +25,7 @@ vec2 rotate(vec2 v, float a) {
 	return m * v;
 }
 
+// sums the value of pixels in a square grid
 vec4 sense(vec2 texCoord) {
 	vec4 sum = vec4(0.0);
 	for (int i = -sensorSize; i <= sensorSize; i++) {
@@ -41,10 +42,13 @@ vec4 sense(vec2 texCoord) {
 
 
 void main() {
+    // texture coordinate
     vec2 texCoord = (position + 1.0) / 2.0;
 
+    // update position
     outPosition = position + velocity / dimensions;
 
+    // update velocity
     vec2 directionForward = velocity;
     vec2 directionRight = rotate(velocity, 0.5 * sensorFOV);
     vec2 directionLeft = rotate(velocity, -0.5 * sensorFOV);
@@ -67,8 +71,10 @@ void main() {
         outVelocity = velocity;
     }
 
+    // normalize
     outVelocity = normalize(outVelocity);
 
+    // boundary condition
     if (outPosition.x <= -1.0 || outPosition.x >= 1.0) {
         outVelocity.x *= -1.0;
     }
