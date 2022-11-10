@@ -14,7 +14,6 @@ const sensorParameters = {
 
 const processParameters = {
     fadeSpeed: 0.01,
-    blurSpeed: 0.0
 }
 
 
@@ -45,10 +44,9 @@ agentFolder.addInput(agentParameters, 'turnSpeed', { label: 'Turn Speed', min: 0
 
 sensorFolder.addInput(sensorParameters, 'FOV', { label: 'FOV', min: 0.0, max: 6.24 });
 sensorFolder.addInput(sensorParameters, 'size', { label: 'Size', min: 0, max: 4, step: 1 });
-sensorFolder.addInput(sensorParameters, 'offset', { label: 'Offset', min: 0.0, max: 500.0 });
+sensorFolder.addInput(sensorParameters, 'offset', { label: 'Offset', min: 0.0, max: 100.0 });
 
 processFolder.addInput(processParameters, 'fadeSpeed', { label: 'Fade Speed', min: 0.0, max: 1.0 });
-processFolder.addInput(processParameters, 'blurSpeed', { label: 'Blur Speed' });
 
 
 pane.on('change', (event) => {

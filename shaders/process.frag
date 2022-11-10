@@ -24,8 +24,7 @@ void main() {
 
     color /= 9.0;
 
-    color -= fadeSpeed;
-    color.a = 1.0;
+    color.xyz -= fadeSpeed;
 
     fragColor = color;
 }
