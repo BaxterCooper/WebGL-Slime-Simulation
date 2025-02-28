@@ -9,5 +9,3 @@ This implementation was written using WebGL2 so that it can be played with inter
 ![Image](./images/image1.png)
 
 ![Image](./images/image2.png)
-
-

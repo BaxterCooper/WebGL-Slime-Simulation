@@ -1,294 +1,280 @@
 class Agent {
-    constructor() {
-        this.position = [Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0];
-        this.velocity = [Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0];
-    }
+  constructor() {
+    this.position = [Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0]
+    this.velocity = [Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0]
+  }
 }
 
 function main() {
-    const gl = getContext();
-    
+  const gl = getContext()
 
-    // ------------------------------------------------------------------------
-    // PROGRAMS
+  // ------------------------------------------------------------------------
+  // PROGRAMS
 
-    const agentProgram = createProgram(gl, './shaders/agent.vert', './shaders/agent.frag', null);
-    const screenProgram = createProgram(gl, './shaders/screen.vert', './shaders/screen.frag', null);
-    const processProgram = createProgram(gl, './shaders/process.vert', './shaders/process.frag', null);
-    const updateProgram = createProgram(gl, './shaders/update.vert', './shaders/update.frag', ['outPosition', 'outVelocity']);
+  const agentProgram = createProgram(gl, "./shaders/agent.vert", "./shaders/agent.frag", null)
+  const screenProgram = createProgram(gl, "./shaders/screen.vert", "./shaders/screen.frag", null)
+  const processProgram = createProgram(gl, "./shaders/process.vert", "./shaders/process.frag", null)
+  const updateProgram = createProgram(gl, "./shaders/update.vert", "./shaders/update.frag", [
+    "outPosition",
+    "outVelocity",
+  ])
 
+  // ------------------------------------------------------------------------
+  // DATA
 
-    // ------------------------------------------------------------------------
-    // DATA
+  const agents = new Array(MAX_AGENTS).fill(0).map(() => new Agent())
 
-    const agents = new Array(MAX_AGENTS).fill(0).map(() => new Agent());
+  const agentPositions = agents.map((agent) => agent.position).flat()
+  const agentVelocities = agents.map((agent) => agent.velocity).flat()
 
-    const agentPositions = agents.map(agent => agent.position).flat();
-    const agentVelocities = agents.map(agent => agent.velocity).flat();
+  const screenVertices = [-1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0]
 
+  // ------------------------------------------------------------------------
+  // TEXTURES
 
-    const screenVertices = [-1.0, -1.0,  -1.0, 1.0,  1.0, 1.0,  -1.0, -1.0,  1.0, -1.0,  1.0, 1.0]
+  const screenTexture1 = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, screenTexture1)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
+  const screenTexture2 = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, screenTexture2)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
-    // ------------------------------------------------------------------------
-    // TEXTURES
+  const screenTextureFramebuffer1 = gl.createFramebuffer()
+  gl.bindFramebuffer(gl.FRAMEBUFFER, screenTextureFramebuffer1)
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, screenTexture1, 0)
+  gl.clearColor(0.0, 0.0, 0.0, 1.0)
+  gl.clear(gl.COLOR_BUFFER_BIT)
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
-    const screenTexture1 = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, screenTexture1);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const screenTextureFramebuffer2 = gl.createFramebuffer()
+  gl.bindFramebuffer(gl.FRAMEBUFFER, screenTextureFramebuffer2)
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, screenTexture2, 0)
+  gl.clearColor(0.0, 0.0, 0.0, 1.0)
+  gl.clear(gl.COLOR_BUFFER_BIT)
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
-    const screenTexture2 = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, screenTexture2);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  // ------------------------------------------------------------------------
+  // BUFFERS
 
+  const agentPositionBuffer1 = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer1)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(agentPositions), gl.DYNAMIC_COPY)
 
-    const screenTextureFramebuffer1 = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, screenTextureFramebuffer1);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, screenTexture1, 0);
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  const agentVelocityBuffer1 = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, agentVelocityBuffer1)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(agentVelocities), gl.DYNAMIC_COPY)
 
-    const screenTextureFramebuffer2 = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, screenTextureFramebuffer2);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, screenTexture2, 0);
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  const screenVerticesBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, screenVerticesBuffer)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(screenVertices), gl.STATIC_DRAW)
 
+  const agentPositionBuffer2 = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer2)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(agentPositions), gl.DYNAMIC_COPY)
 
-    // ------------------------------------------------------------------------
-    // BUFFERS
+  const agentVelocityBuffer2 = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, agentVelocityBuffer2)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(agentVelocities), gl.DYNAMIC_COPY)
 
-    const agentPositionBuffer1 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer1);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(agentPositions), gl.DYNAMIC_COPY);
+  // ------------------------------------------------------------------------
+  // VAOs
 
-    const agentVelocityBuffer1 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, agentVelocityBuffer1);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(agentVelocities), gl.DYNAMIC_COPY);
+  const agentVAO1 = gl.createVertexArray()
+  gl.bindVertexArray(agentVAO1)
+  gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer1)
+  gl.vertexAttribPointer(gl.getAttribLocation(agentProgram, "position"), 2, gl.FLOAT, false, 0, 0)
+  gl.enableVertexAttribArray(gl.getAttribLocation(agentProgram, "position"))
 
+  const agentVAO2 = gl.createVertexArray()
+  gl.bindVertexArray(agentVAO2)
+  gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer2)
+  gl.vertexAttribPointer(gl.getAttribLocation(agentProgram, "position"), 2, gl.FLOAT, false, 0, 0)
+  gl.enableVertexAttribArray(gl.getAttribLocation(agentProgram, "position"))
 
-    const screenVerticesBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, screenVerticesBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(screenVertices), gl.STATIC_DRAW);
+  const screenVAO = gl.createVertexArray()
+  gl.bindVertexArray(screenVAO)
+  gl.bindBuffer(gl.ARRAY_BUFFER, screenVerticesBuffer)
+  gl.vertexAttribPointer(gl.getAttribLocation(screenProgram, "position"), 2, gl.FLOAT, false, 0, 0)
+  gl.enableVertexAttribArray(gl.getAttribLocation(screenProgram, "position"))
 
+  const processVAO = gl.createVertexArray()
+  gl.bindVertexArray(processVAO)
+  gl.bindBuffer(gl.ARRAY_BUFFER, screenVerticesBuffer)
+  gl.vertexAttribPointer(gl.getAttribLocation(processProgram, "position"), 2, gl.FLOAT, false, 0, 0)
+  gl.enableVertexAttribArray(gl.getAttribLocation(processProgram, "position"))
 
-    const agentPositionBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(agentPositions), gl.DYNAMIC_COPY);
+  const updateVAO1 = gl.createVertexArray()
+  gl.bindVertexArray(updateVAO1)
+  gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer1)
+  gl.vertexAttribPointer(gl.getAttribLocation(updateProgram, "position"), 2, gl.FLOAT, false, 0, 0)
+  gl.enableVertexAttribArray(gl.getAttribLocation(updateProgram, "position"))
+  gl.bindBuffer(gl.ARRAY_BUFFER, agentVelocityBuffer1)
+  gl.vertexAttribPointer(gl.getAttribLocation(updateProgram, "velocity"), 2, gl.FLOAT, true, 0, 0)
+  gl.enableVertexAttribArray(gl.getAttribLocation(updateProgram, "velocity"))
 
-    const agentVelocityBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, agentVelocityBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(agentVelocities), gl.DYNAMIC_COPY);
+  const updateVAO2 = gl.createVertexArray()
+  gl.bindVertexArray(updateVAO2)
+  gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer2)
+  gl.vertexAttribPointer(gl.getAttribLocation(updateProgram, "position"), 2, gl.FLOAT, false, 0, 0)
+  gl.enableVertexAttribArray(gl.getAttribLocation(updateProgram, "position"))
+  gl.bindBuffer(gl.ARRAY_BUFFER, agentVelocityBuffer2)
+  gl.vertexAttribPointer(gl.getAttribLocation(updateProgram, "velocity"), 2, gl.FLOAT, true, 0, 0)
+  gl.enableVertexAttribArray(gl.getAttribLocation(updateProgram, "velocity"))
 
+  gl.bindBuffer(gl.ARRAY_BUFFER, null)
 
-    // ------------------------------------------------------------------------
-    // VAOs
+  // ------------------------------------------------------------------------
+  // RENDER
 
-    const agentVAO1 = gl.createVertexArray();
-    gl.bindVertexArray(agentVAO1);
-    gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer1);
-    gl.vertexAttribPointer(gl.getAttribLocation(agentProgram, 'position'), 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(gl.getAttribLocation(agentProgram, 'position'));
+  let agentVAO = agentVAO1
+  let updateVAO = updateVAO1
 
-    const agentVAO2 = gl.createVertexArray();
-    gl.bindVertexArray(agentVAO2);
-    gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer2);
-    gl.vertexAttribPointer(gl.getAttribLocation(agentProgram, 'position'), 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(gl.getAttribLocation(agentProgram, 'position'));
+  let agentPositionBuffer = agentPositionBuffer2
+  let agentVelocityBuffer = agentVelocityBuffer2
 
+  let screenTexure = screenTexture1
+  let agentFramebuffer = screenTextureFramebuffer1
+  let processFramebuffer = screenTextureFramebuffer2
 
-    const screenVAO = gl.createVertexArray();
-    gl.bindVertexArray(screenVAO);
-    gl.bindBuffer(gl.ARRAY_BUFFER, screenVerticesBuffer);
-    gl.vertexAttribPointer(gl.getAttribLocation(screenProgram, 'position'), 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(gl.getAttribLocation(screenProgram, 'position'));
+  requestAnimationFrame(draw)
 
+  function draw() {
+    // draw agents to texture
+    gl.bindFramebuffer(gl.FRAMEBUFFER, agentFramebuffer)
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
-    const processVAO = gl.createVertexArray();
-    gl.bindVertexArray(processVAO);
-    gl.bindBuffer(gl.ARRAY_BUFFER, screenVerticesBuffer);
-    gl.vertexAttribPointer(gl.getAttribLocation(processProgram, 'position'), 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(gl.getAttribLocation(processProgram, 'position'));
+    gl.useProgram(agentProgram)
+    gl.bindVertexArray(agentVAO)
+    gl.uniform3fv(
+      gl.getUniformLocation(agentProgram, "agentColor"),
+      new Float32Array(Object.values(agentParameters.color))
+    )
 
+    gl.drawArrays(gl.POINTS, 0, agentParameters.count)
 
-    const updateVAO1 = gl.createVertexArray();
-    gl.bindVertexArray(updateVAO1);
-    gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer1);
-    gl.vertexAttribPointer(gl.getAttribLocation(updateProgram, 'position'), 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(gl.getAttribLocation(updateProgram, 'position'));
-    gl.bindBuffer(gl.ARRAY_BUFFER, agentVelocityBuffer1);
-    gl.vertexAttribPointer(gl.getAttribLocation(updateProgram, 'velocity'), 2, gl.FLOAT, true, 0, 0);
-    gl.enableVertexAttribArray(gl.getAttribLocation(updateProgram, 'velocity'));
+    // draw texture to screen
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
-    const updateVAO2 = gl.createVertexArray();
-    gl.bindVertexArray(updateVAO2);
-    gl.bindBuffer(gl.ARRAY_BUFFER, agentPositionBuffer2);
-    gl.vertexAttribPointer(gl.getAttribLocation(updateProgram, 'position'), 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(gl.getAttribLocation(updateProgram, 'position'));
-    gl.bindBuffer(gl.ARRAY_BUFFER, agentVelocityBuffer2);
-    gl.vertexAttribPointer(gl.getAttribLocation(updateProgram, 'velocity'), 2, gl.FLOAT, true, 0, 0);
-    gl.enableVertexAttribArray(gl.getAttribLocation(updateProgram, 'velocity'));
+    gl.useProgram(screenProgram)
+    gl.bindVertexArray(screenVAO)
+    gl.bindTexture(gl.TEXTURE_2D, screenTexure)
 
+    gl.drawArrays(gl.TRIANGLES, 0, 6)
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    // apply post processing
+    gl.bindFramebuffer(gl.FRAMEBUFFER, processFramebuffer)
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
-    
-    // ------------------------------------------------------------------------
-    // RENDER
+    gl.useProgram(processProgram)
+    gl.bindVertexArray(processVAO)
+    gl.bindTexture(gl.TEXTURE_2D, screenTexure)
+    gl.uniform2f(gl.getUniformLocation(processProgram, "dimensions"), gl.canvas.width, gl.canvas.height)
+    gl.uniform1f(gl.getUniformLocation(processProgram, "fadeSpeed"), processParameters.fadeSpeed)
 
-    let agentVAO = agentVAO1;
-    let updateVAO = updateVAO1;
+    gl.drawArrays(gl.TRIANGLES, 0, 6)
 
-    let agentPositionBuffer = agentPositionBuffer2;
-    let agentVelocityBuffer = agentVelocityBuffer2;
+    // update agents
+    gl.useProgram(updateProgram)
+    gl.bindVertexArray(updateVAO)
+    gl.bindTexture(gl.TEXTURE_2D, screenTexure)
+    gl.uniform2f(gl.getUniformLocation(updateProgram, "dimensions"), gl.canvas.width, gl.canvas.height)
+    gl.uniform1f(gl.getUniformLocation(updateProgram, "turnSpeed"), agentParameters.turnSpeed)
+    gl.uniform1f(gl.getUniformLocation(updateProgram, "sensorFOV"), sensorParameters.FOV)
+    gl.uniform1f(gl.getUniformLocation(updateProgram, "sensorOffset"), sensorParameters.offset)
+    gl.uniform1i(gl.getUniformLocation(updateProgram, "sensorSize"), sensorParameters.size)
 
-    let screenTexure = screenTexture1;
-    let agentFramebuffer = screenTextureFramebuffer1;
-    let processFramebuffer = screenTextureFramebuffer2;
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, agentPositionBuffer)
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, agentVelocityBuffer)
+    gl.enable(gl.RASTERIZER_DISCARD)
+    gl.beginTransformFeedback(gl.POINTS)
 
-    requestAnimationFrame(draw);
+    gl.drawArrays(gl.POINTS, 0, agentParameters.count)
 
-    function draw() {
-        // draw agents to texture
-        gl.bindFramebuffer(gl.FRAMEBUFFER, agentFramebuffer);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-        
-        gl.useProgram(agentProgram);
-        gl.bindVertexArray(agentVAO);
-        gl.uniform3fv(gl.getUniformLocation(agentProgram, 'agentColor'), new Float32Array(Object.values(agentParameters.color)));
-        
-        gl.drawArrays(gl.POINTS, 0, agentParameters.count);
+    gl.endTransformFeedback()
+    gl.disable(gl.RASTERIZER_DISCARD)
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null)
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, null)
 
-
-        // draw texture to screen
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-        gl.useProgram(screenProgram);
-        gl.bindVertexArray(screenVAO);
-        gl.bindTexture(gl.TEXTURE_2D, screenTexure);
-
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-
-        // apply post processing
-        gl.bindFramebuffer(gl.FRAMEBUFFER, processFramebuffer);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-        gl.useProgram(processProgram);
-        gl.bindVertexArray(processVAO);
-        gl.bindTexture(gl.TEXTURE_2D, screenTexure);
-        gl.uniform2f(gl.getUniformLocation(processProgram, 'dimensions'), gl.canvas.width, gl.canvas.height);
-        gl.uniform1f(gl.getUniformLocation(processProgram, 'fadeSpeed'), processParameters.fadeSpeed);
-        
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-
-        // update agents
-        gl.useProgram(updateProgram);
-        gl.bindVertexArray(updateVAO);
-        gl.bindTexture(gl.TEXTURE_2D, screenTexure);
-        gl.uniform2f(gl.getUniformLocation(updateProgram, 'dimensions'), gl.canvas.width, gl.canvas.height);
-        gl.uniform1f(gl.getUniformLocation(updateProgram, 'turnSpeed'), agentParameters.turnSpeed);
-        gl.uniform1f(gl.getUniformLocation(updateProgram, 'sensorFOV'), sensorParameters.FOV);
-        gl.uniform1f(gl.getUniformLocation(updateProgram, 'sensorOffset'), sensorParameters.offset);
-        gl.uniform1i(gl.getUniformLocation(updateProgram, 'sensorSize'), sensorParameters.size);
-
-        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, agentPositionBuffer);
-        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, agentVelocityBuffer);
-        gl.enable(gl.RASTERIZER_DISCARD);
-        gl.beginTransformFeedback(gl.POINTS);
-
-        gl.drawArrays(gl.POINTS, 0, agentParameters.count);
-
-        gl.endTransformFeedback();
-        gl.disable(gl.RASTERIZER_DISCARD);
-        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
-        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, null);
-
-
-        // swap VAOs, buffers, textures and framebuffers
-        if (agentVAO === agentVAO1) {
-            agentVAO = agentVAO2;
-            updateVAO = updateVAO2;
-            agentPositionBuffer = agentPositionBuffer1;
-            agentVelocityBuffer = agentVelocityBuffer1;
-            screenTexure = screenTexture2;
-            agentFramebuffer = screenTextureFramebuffer2;
-            processFramebuffer = screenTextureFramebuffer1;
-
-        } else {
-            agentVAO = agentVAO1;
-            updateVAO = updateVAO1;
-            agentPositionBuffer = agentPositionBuffer2;
-            agentVelocityBuffer = agentVelocityBuffer2;
-            screenTexure = screenTexture1;
-            agentFramebuffer = screenTextureFramebuffer1;
-            processFramebuffer = screenTextureFramebuffer2;
-        }
-
-        requestAnimationFrame(draw);
+    // swap VAOs, buffers, textures and framebuffers
+    if (agentVAO === agentVAO1) {
+      agentVAO = agentVAO2
+      updateVAO = updateVAO2
+      agentPositionBuffer = agentPositionBuffer1
+      agentVelocityBuffer = agentVelocityBuffer1
+      screenTexure = screenTexture2
+      agentFramebuffer = screenTextureFramebuffer2
+      processFramebuffer = screenTextureFramebuffer1
+    } else {
+      agentVAO = agentVAO1
+      updateVAO = updateVAO1
+      agentPositionBuffer = agentPositionBuffer2
+      agentVelocityBuffer = agentVelocityBuffer2
+      screenTexure = screenTexture1
+      agentFramebuffer = screenTextureFramebuffer1
+      processFramebuffer = screenTextureFramebuffer2
     }
+
+    requestAnimationFrame(draw)
+  }
 }
 
-main();
+main()
 
 function getContext() {
-    const canvas = document.getElementsByTagName("canvas")[0];
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+  const canvas = document.getElementsByTagName("canvas")[0]
+  canvas.width = canvas.clientWidth
+  canvas.height = canvas.clientHeight
 
-    const gl = canvas.getContext("webgl2");
+  const gl = canvas.getContext("webgl2")
 
-    return gl;
+  return gl
 }
 
 function createProgram(gl, vertexSourcePath, fragmentSourcePath, transformFeedbackVaryings) {
-    const vertexSource = fetch(vertexSourcePath);
-    const fragmentSource = fetch(fragmentSourcePath);
-    
-    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  const vertexSource = fetch(vertexSourcePath)
+  const fragmentSource = fetch(fragmentSourcePath)
 
-    gl.shaderSource(vertexShader, vertexSource);
-    gl.shaderSource(fragmentShader, fragmentSource);
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER)
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
 
-    gl.compileShader(vertexShader);
-    gl.compileShader(fragmentShader);
+  gl.shaderSource(vertexShader, vertexSource)
+  gl.shaderSource(fragmentShader, fragmentSource)
 
-    const program = gl.createProgram();
+  gl.compileShader(vertexShader)
+  gl.compileShader(fragmentShader)
 
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
+  const program = gl.createProgram()
 
-    if (transformFeedbackVaryings) {
-        gl.transformFeedbackVaryings(program, transformFeedbackVaryings, gl.SEPARATE_ATTRIBS);
-    }
+  gl.attachShader(program, vertexShader)
+  gl.attachShader(program, fragmentShader)
 
-    gl.linkProgram(program);
+  if (transformFeedbackVaryings) {
+    gl.transformFeedbackVaryings(program, transformFeedbackVaryings, gl.SEPARATE_ATTRIBS)
+  }
 
-    return program;
+  gl.linkProgram(program)
+
+  return program
 }
 
-
 function fetch(path, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', path, Boolean(callback));
-    if (callback != null) {
-        xhr.onload = function() {
-            callback(xhr.responseText);
-        };
+  const xhr = new XMLHttpRequest()
+  xhr.open("GET", path, Boolean(callback))
+  if (callback != null) {
+    xhr.onload = function () {
+      callback(xhr.responseText)
     }
-    xhr.send();
-    return xhr.responseText;
+  }
+  xhr.send()
+  return xhr.responseText
 }

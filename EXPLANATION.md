@@ -3,12 +3,13 @@
 ![Image](./images/image2.png)
 
 ## Agent Class
+
 ```js
 class Agent {
-    constructor() {
-        this.position = [Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0];
-        this.velocity = [Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0];
-    }
+  constructor() {
+    this.position = [Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0]
+    this.velocity = [Math.random() * 2.0 - 1.0, Math.random() * 2.0 - 1.0]
+  }
 }
 ```
 
@@ -32,6 +33,7 @@ This project requires 4 shader programs.
 ### Agent Program
 
 #### Vertex Shader
+
 ```glsl
 #version 300 es
 
@@ -48,6 +50,7 @@ void main() {
 The vertex shader simply takes in the `position` of an agent and outputs this as the `gl_Position` to the fragment shader. Here we have also specified the `gl_PointSize` to be 1 pixel.
 
 #### Fragment Shader
+
 ```glsl
 #version 300 es
 
@@ -67,6 +70,7 @@ The fragment shader takes in 1 uniform `agentColor` which specifies the RGB colo
 ### Screen Program
 
 #### Vertex Shader
+
 ```glsl
 #version 300 es
 
@@ -82,11 +86,12 @@ void main() {
 }
 ```
 
-The vertex shader takes as input `position` which are the coordinates required to draw 2 triangles to cover the entire screen and outputs this as `gl_Position` to the fragment shader. 
+The vertex shader takes as input `position` which are the coordinates required to draw 2 triangles to cover the entire screen and outputs this as `gl_Position` to the fragment shader.
 
 The vertex shader also `texCoord` to be `(position + 1.0) / 2.0`. This is because in glsl screen-coordinates range from `[-1.0, 1.0]` whereas texture-coordinates range from `[0.0, 1.0]`.
 
 #### Fragment Shader
+
 ```glsl
 #version 300 es
 
@@ -110,6 +115,7 @@ The fragment shader then sets each pixel on the screen to be the color of the `s
 ### Process Program
 
 #### Vertex Shader
+
 ```glsl
 #version 300 es
 
@@ -128,6 +134,7 @@ void main() {
 This vertex shader is identical to the screen program's vertex shader as they are both using a texture.
 
 #### Fragment Shader
+
 ```glsl
 #version 300 es
 
@@ -174,6 +181,7 @@ Finally we set the `fragColor` to this new calculate `color`.
 ### Update Program
 
 #### Vertex Shader
+
 ```glsl
 #version 300 es
 
@@ -266,9 +274,10 @@ void main() {
 }
 ```
 
-There are lots of components to this but the concept is fairly simple. 
+There are lots of components to this but the concept is fairly simple.
 
 #### Fragment Shader
+
 ```glsl
 #version 300 es
 
@@ -279,12 +288,12 @@ void main() {}
 
 As this update program simply writes agent data into buffers. The fragment shader is not used and so this is empty.
 
-
 ## JavaScript
 
 ### High-Level Overview
 
 #### Agent Program
+
 For the agent program we are going to need 2 buffers, one to store agent positions and the other to store agent velocities.
 
 #### Screen Program
