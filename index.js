@@ -190,6 +190,7 @@ function main() {
     gl.uniform2f(gl.getUniformLocation(updateProgram, "dimensions"), gl.canvas.width, gl.canvas.height)
     gl.uniform1f(gl.getUniformLocation(updateProgram, "turnSpeed"), agentParameters.turnSpeed)
     gl.uniform1f(gl.getUniformLocation(updateProgram, "sensorFOV"), sensorParameters.FOV)
+    gl.uniform1f(gl.getUniformLocation(updateProgram, "sensorDistance"), sensorParameters.distance)
     gl.uniform1f(gl.getUniformLocation(updateProgram, "sensorOffset"), sensorParameters.offset)
     gl.uniform1i(gl.getUniformLocation(updateProgram, "sensorSize"), sensorParameters.size)
     gl.uniform1f(gl.getUniformLocation(updateProgram, "agentSpeed"), agentParameters.speed)

@@ -12,7 +12,8 @@ const agentParameters = {
 const sensorParameters = {
   FOV: 70.0,
   size: 1,
-  offset: 5.0,
+  distance: 5.0,
+  offset: 0.0,
 }
 
 const processParameters = {
@@ -22,6 +23,7 @@ const processParameters = {
 // tweakpane
 const pane = new Tweakpane.Pane({
   title: "Parameters",
+  position: { x: 16, y: 16 },
 })
 
 const agentFolder = pane.addFolder({
@@ -46,7 +48,8 @@ agentFolder.addInput(agentParameters, "turnSpeed", { label: "Turn Speed", min: 0
 
 sensorFolder.addInput(sensorParameters, "FOV", { label: "FOV (degrees)", min: 0.0, max: 360.0 })
 sensorFolder.addInput(sensorParameters, "size", { label: "Size", min: 0, max: 4, step: 1 })
-sensorFolder.addInput(sensorParameters, "offset", { label: "Offset", min: 0, max: 100, step: 1 })
+sensorFolder.addInput(sensorParameters, "distance", { label: "Distance", min: 0, max: 100, step: 1 })
+sensorFolder.addInput(sensorParameters, "offset", { label: "Offset", min: -50, max: 50, step: 1 })
 
 processFolder.addInput(processParameters, "fadeSpeed", { label: "Fade Speed", min: 0.0, max: 0.1, step: 0.001 })
 

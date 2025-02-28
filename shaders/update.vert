@@ -10,6 +10,7 @@ uniform vec2 dimensions;
 
 uniform float turnSpeed;
 uniform float sensorFOV;
+uniform float sensorDistance;
 uniform float sensorOffset;
 uniform int sensorSize;
 uniform float agentSpeed;
@@ -28,6 +29,11 @@ vec2 rotate(vec2 v, float a) {
 	float c = cos(a);
 	mat2 m = mat2(c, -s, s, c);
 	return m * v;
+}
+
+// returns a vector perpendicular to v (90 degrees counter-clockwise)
+vec2 perpendicular(vec2 v) {
+    return vec2(-v.y, v.x);
 }
 
 // sums the value of pixels in a square grid
@@ -55,15 +61,16 @@ void main() {
 
     // Convert FOV from degrees to radians
     float sensorFOVRadians = degToRad(sensorFOV);
+    float sensorOffsetRadians = degToRad(sensorOffset);
     
     // update velocity
-    vec2 directionForward = velocity;
-    vec2 directionRight = rotate(velocity, 0.5 * sensorFOVRadians);
-    vec2 directionLeft = rotate(velocity, -0.5 * sensorFOVRadians);
+    vec2 directionForward = normalize(velocity);
+    vec2 directionRight = rotate(directionForward, 0.5 * sensorFOVRadians + sensorOffsetRadians);
+    vec2 directionLeft = rotate(directionForward, -0.5 * sensorFOVRadians + sensorOffsetRadians);
 
-    vec4 senseForward = sense(texCoord + directionForward * sensorOffset / dimensions);
-    vec4 senseRight = sense(texCoord + directionRight * sensorOffset / dimensions);
-    vec4 senseLeft = sense(texCoord + directionLeft * sensorOffset / dimensions);
+    vec4 senseForward = sense(texCoord + directionForward * sensorDistance / dimensions);
+    vec4 senseRight = sense(texCoord + directionRight * sensorDistance / dimensions);
+    vec4 senseLeft = sense(texCoord + directionLeft * sensorDistance / dimensions);
 
     float weightForward = senseForward.x + senseForward.y + senseForward.z;
     float weightRight = senseRight.x + senseRight.y + senseRight.z;
