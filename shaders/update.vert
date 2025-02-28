@@ -12,10 +12,15 @@ uniform float turnSpeed;
 uniform float sensorFOV;
 uniform float sensorOffset;
 uniform int sensorSize;
-
+uniform float agentSpeed;
 
 out vec2 outPosition;
 out vec2 outVelocity;
+
+// Convert degrees to radians
+float degToRad(float degrees) {
+    return degrees * 3.14159265359 / 180.0;
+}
 
 // rotates a 2D vector 'a' radians counter-clockwise
 vec2 rotate(vec2 v, float a) {
@@ -45,13 +50,16 @@ void main() {
     // texture coordinate
     vec2 texCoord = (position + 1.0) / 2.0;
 
-    // update position
-    outPosition = position + velocity / dimensions;
+    // update position with speed parameter
+    outPosition = position + (velocity * agentSpeed) / dimensions;
 
+    // Convert FOV from degrees to radians
+    float sensorFOVRadians = degToRad(sensorFOV);
+    
     // update velocity
     vec2 directionForward = velocity;
-    vec2 directionRight = rotate(velocity, 0.5 * sensorFOV);
-    vec2 directionLeft = rotate(velocity, -0.5 * sensorFOV);
+    vec2 directionRight = rotate(velocity, 0.5 * sensorFOVRadians);
+    vec2 directionLeft = rotate(velocity, -0.5 * sensorFOVRadians);
 
     vec4 senseForward = sense(texCoord + directionForward * sensorOffset / dimensions);
     vec4 senseRight = sense(texCoord + directionRight * sensorOffset / dimensions);

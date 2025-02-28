@@ -192,6 +192,7 @@ function main() {
     gl.uniform1f(gl.getUniformLocation(updateProgram, "sensorFOV"), sensorParameters.FOV)
     gl.uniform1f(gl.getUniformLocation(updateProgram, "sensorOffset"), sensorParameters.offset)
     gl.uniform1i(gl.getUniformLocation(updateProgram, "sensorSize"), sensorParameters.size)
+    gl.uniform1f(gl.getUniformLocation(updateProgram, "agentSpeed"), agentParameters.speed)
 
     gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, agentPositionBuffer)
     gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, agentVelocityBuffer)
