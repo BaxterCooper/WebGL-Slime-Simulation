@@ -23,7 +23,6 @@ const processParameters = {
 // tweakpane
 const pane = new Tweakpane.Pane({
   title: "Parameters",
-  position: { x: 16, y: 16 },
 })
 
 const agentFolder = pane.addFolder({
